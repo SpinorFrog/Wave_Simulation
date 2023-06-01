@@ -1,2 +1,2 @@
-# Wave_Simulation
+# Press "E" to get mouse cursor
  
