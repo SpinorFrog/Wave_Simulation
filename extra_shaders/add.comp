@@ -1,0 +1,39 @@
+#version 460 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D imgOutput;
+layout(rgba32f, binding = 2) uniform image2D derivative;
+
+uniform mat4 viewmat;
+uniform float time;
+uniform sampler2D current_data;
+uniform int classical;
+
+mat2 i = {vec2(0, 1.0f), vec2(-1.0f, 0)};
+
+vec4 recursion(vec2 num);
+vec2 res = vec2(1024, 1024);
+float dt = 0.0001;
+float dx = 0.0625;
+
+void main()
+{
+    ivec2 texCoords = ivec2(gl_GlobalInvocationID.xy);
+    //vec2 pos = 128*vec2(texCoords-res/2)/res;
+    //vec2 adjTexCoord = texCoords+vec2(0.5);
+    
+    vec4 der = imageLoad(derivative, texCoords);
+    
+    vec2 new_color;
+    new_color = der.zw + 2*der.xy*dt;
+    if(bool(classical))
+        new_color = der.xy;
+
+    imageStore(imgOutput, texCoords, new_color.xyxy);
+
+    //color = sin(time);
+    //vec4 color = vec4(pos.x*pos.x - pos.y*pos.y, 0, 0, 1);
+    //if(length(pos) < 2)
+        //color = recursion(pos);
+    //imageStore(imgOutput, texCoords, color);
+}//

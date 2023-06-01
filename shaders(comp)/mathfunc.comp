@@ -1,0 +1,20 @@
+#version 460
+
+mat2 r = mat2(1.0);
+mat2 i = {vec2(0, 1.0f), vec2(-1.0f, 0)};
+
+vec4 recursion(vec2 num){
+    mat2 c = r*num.x + i*num.y;
+    mat2 ognum = c;
+    mat4 rot;
+    float ang = 0;
+    for(int j = 0; j < 500 && determinant(ognum) < 4; j ++){
+        ognum = ognum * ognum + c;
+        ang = j;
+    }
+    rot[0] = vec4(cos(ang/25), 0, sin(ang/25), 0);
+    rot[1] = vec4(0, 1, 0, 0);
+    rot[2] = vec4(-sin(ang/25), 0, cos(ang/25), 0);
+    rot[3] = vec4(0, 0, 0, 1);
+    return rot*vec4(1, 0, 0, 1);
+}//

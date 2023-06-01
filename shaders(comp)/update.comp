@@ -1,0 +1,110 @@
+#version 460 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D data;
+layout(rgba32f, binding = 1) uniform image2D old_data;
+layout(rgba32f, binding = 2) uniform image2D delta;
+
+uniform mat4 viewmat;
+uniform float time;
+//uniform sampler2D data;
+//uniform sampler2D old_data;
+
+mat2 i = {vec2(0, 1.0f), vec2(-1.0f, 0)};
+
+vec4 recursion(vec2 num);
+vec2 res = vec2(1024, 1024);
+float dt = 0.001;
+float dx = 0.0625;
+//float dx = 0.5f;
+
+/*vec4 tL;
+vec4 tM;
+vec4 tR;
+vec4 mL;
+vec4 mR;
+vec4 bL;
+vec4 bM;
+vec4 bR;*/
+
+vec2 calDer(vec2 psi, float potential);
+
+void main()
+{
+    ivec2 texCoords = ivec2(gl_GlobalInvocationID.xy);
+    vec2 pos = 64*vec2(texCoords-res/2)/res;
+    vec4 color = imageLoad(data, texCoords);
+    vec4 old_color = imageLoad(old_data, texCoords);
+    imageStore(old_data, texCoords, color);
+
+    vec2 tL = imageLoad(data, texCoords + ivec2(-1, 1)).xy;
+    vec2 tM = imageLoad(data, texCoords + ivec2(0, 1)).xy;
+    vec2 tR = imageLoad(data, texCoords + ivec2(1, 1)).xy;
+
+    vec2 mL = imageLoad(data, texCoords + ivec2(-1, 0)).xy;
+    vec2 mR = imageLoad(data, texCoords + ivec2(1, 0)).xy;
+
+    vec2 bL = imageLoad(data, texCoords + ivec2(-1, -1)).xy;
+    vec2 bM = imageLoad(data, texCoords + ivec2(0, -1)).xy;
+    vec2 bR = imageLoad(data, texCoords + ivec2(1, -1)).xy;
+
+    //barrier();
+
+    vec2 data_vector = color.xy;
+
+    //vec2 lap = (0.25*tL.xy + 0.5*tM.xy + 0.25*tR.xy + 0.5*mL.xy - 3*data_vector + 0.5*mR.xy + 0.25*bL.xy + 0.5*bM.xy + 0.25*bR.xy)/(dx*dx);
+
+    //vec2 ke = -0.5f*lap;
+    float pe = 0;
+    float w = 3;
+    pe = 0.5*w*dot(pos-vec2(0,0), pos-vec2(0,0));
+    //pe = 100/(length(pos-vec2(40, 0)));
+    /*if(abs(pos.x) < 10 && abs(pos.y) < 10){
+        pe = 0;
+    }
+    else{
+        pe = 10000;
+    }*/
+    /*if(pos.x > 8 && pos.x < 12)
+        pe = 150;
+    else if(pos.x < -8 && pos.x > -12)  
+        pe = 150;*/
+    //vec2 k1 = calDer(data_vector, pe);
+    //vec2 k2 = calDer(data_vector + (dt/2)*k1, pe);
+    //vec2 k3 = calDer(data_vector + (dt/2)*k2, pe);
+    //vec2 k4 = calDer(data_vector + (dt)*k3, pe);
+    vec2 lap = (0.25*tL + 0.5*tM + 0.25*tR + 
+                0.50*mL - 3.0*data_vector + 0.50*mR + 
+                0.25*bL + 0.5*bM + 0.25*bR)/(dx*dx);
+    /*vec2 lap = (0*tL + tM + 0*tR + 
+                mL - 4.0f*data_vector + mR + 
+                0*bL + bM + 0*bR)/(dx*dx);*/
+    vec2 ke = -0.5f*lap;
+
+    //vec2 derivative = (dt/6)*(k1 + 2*k2 + 2*k3 + k4);
+    vec2 derivative = -i*(ke + pe * data_vector);
+    //vec2 derivative = -i*(ke + pe*data_vector);
+    if(texCoords.x <= 1 || texCoords.x >= 1022 || texCoords.y <= 1 || texCoords.y >= 1022){
+        derivative = vec2(0);
+    }
+
+    //color = vec4(old_color.xy + 2*derivative*dt, color.zw);
+    //barrier();
+    //color = vec4(color.xy, old_color.xy + 2*derivative*dt);
+    //color = sin(time);
+    //vec4 color = vec4(pos.x*pos.x - pos.y*pos.y, 0, 0, 1);
+    //if(length(pos) < 2)
+        //color = recursion(pos);
+    //imageStore(data, texCoords, color);
+    imageStore(delta, texCoords, vec4(derivative, old_color.xy));
+}
+
+/*vec2 calDer(vec2 psi, float potential){
+    //discrete laplacian
+    vec2 lap = (0.25*tL.xy + 0.5*tM.xy + 0.25*tR.xy + 
+                0.50*mL.xy - 3.0*psi   + 0.50*mR.xy + 
+                0.25*bL.xy + 0.5*bM.xy + 0.25*bR.xy)/(dx*dx);
+    vec2 ke = -0.5f*lap;
+    return -i*(ke + psi*potential);
+}*/
+//

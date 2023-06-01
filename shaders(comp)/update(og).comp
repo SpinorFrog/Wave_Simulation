@@ -1,0 +1,32 @@
+#version 460 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D imgOutput;
+
+uniform mat4 viewmat;
+uniform float time;
+
+vec2 res = vec2(1024, 1024);
+mat2 i;
+mat2 r = mat2(1.0f);
+
+vec4 recursion(vec2 num);
+
+void main()
+{
+    //float angle = sin(time);
+    i[0] = vec2(0, 1);
+    i[1] = vec2(-1, 0);
+
+    ivec2 texCoords = ivec2(gl_GlobalInvocationID.xy);
+    //vec2 pos = vec2(mat3(transpose(viewmat))*vec3(texCoords, 1));
+    vec2 pos = 128*vec2(texCoords-res/2)/res;
+    float height = exp(-dot(pos,pos));
+
+    //vec4 color = vec4(sin(pos.x + time)*cos(pos.y+2*time), 0, 0, 1);
+    vec4 color = vec4(sin(length(pos) - 5*time), 0, 0, 1);
+    //vec4 color = vec4(pos.x*pos.x - pos.y*pos.y, 0, 0, 1);
+    //if(length(pos) < 2)
+        //color = recursion(pos);
+    imageStore(imgOutput, texCoords, color);
+}//

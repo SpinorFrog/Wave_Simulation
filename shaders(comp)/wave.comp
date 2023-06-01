@@ -1,0 +1,81 @@
+#version 460 core
+#define PI 3.14159
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D data;
+layout(rgba32f, binding = 1) uniform image2D old_data;
+layout(rgba32f, binding = 2) uniform image2D delta;
+
+uniform mat4 viewmat;
+uniform float time;
+uniform int classical;
+
+mat2 i = {vec2(0, 1.0f), vec2(-1.0f, 0)};
+
+vec4 recursion(vec2 num);
+vec2 res = vec2(1024);
+float dt = 0.001;
+float dx = 0.0625;
+bool hitbound = false;
+
+vec4 wavefunction(vec2 laplacian, vec2 current_value, vec2 old_value, vec2 position);
+
+void main()
+{
+    ivec2 texCoords = ivec2(gl_GlobalInvocationID.xy);
+    vec2 pos = 64*vec2(texCoords-res/2)/res;
+    vec4 color = imageLoad(data, texCoords);
+    vec4 old_color = imageLoad(old_data, texCoords);
+    imageStore(old_data, texCoords, color);
+
+    vec2 tL = imageLoad(data, texCoords + ivec2(-1, 1)).xy;
+    vec2 tM = imageLoad(data, texCoords + ivec2(0, 1)).xy;
+    vec2 tR = imageLoad(data, texCoords + ivec2(1, 1)).xy;
+
+    vec2 mL = imageLoad(data, texCoords + ivec2(-1, 0)).xy;
+    vec2 mR = imageLoad(data, texCoords + ivec2(1, 0)).xy;
+
+    vec2 bL = imageLoad(data, texCoords + ivec2(-1, -1)).xy;
+    vec2 bM = imageLoad(data, texCoords + ivec2(0, -1)).xy;
+    vec2 bR = imageLoad(data, texCoords + ivec2(1, -1)).xy;
+
+    vec2 data_vector = color.xy;
+
+    vec2 lap = (0.25*tL + 0.5*tM + 0.25*tR + 
+                0.50*mL - 3.0*data_vector + 0.50*mR + 
+                0.25*bL + 0.5*bM + 0.25*bR)/(dx*dx);
+    if(texCoords.x <= 1 || texCoords.x >= 1022 || texCoords.y <= 1 || texCoords.y >= 1022){
+       lap = vec2(0);
+       hitbound = true;
+    }
+
+    vec4 wave = wavefunction(lap, data_vector, old_color.xy, pos);
+    if(hitbound)
+        wave.xy = data_vector; 
+    imageStore(delta, texCoords, wave);
+}
+
+vec4 wavefunction(vec2 laplacian, vec2 current_value, vec2 old_value, vec2 position){
+    vec2 change;
+    /*Classical Wave Function*/
+    float v = 0.5f;
+    //change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*laplacian;
+
+    /*klein gordon equation*/
+    float m = 2.5f;
+    change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*(laplacian - pow(m, 2)*current_value);
+
+    /*sine gordon equation*/
+    //change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*(laplacian - sin(current_value.x)*vec2(1, 0));
+
+    /*schrodinger equation*/
+    float w = 3.0f;
+    float pe = 0.5*pow(w, 2)*dot(position, position);
+    vec2 ke = -0.5f*laplacian;
+    if(!bool(classical)){
+        change = -i*(ke + pe*current_value);
+        return vec4(old_value + 2.0f*0.0001*change, 0, 0);
+    }
+
+    return vec4(change, old_value);
+}//
