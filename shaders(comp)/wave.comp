@@ -56,14 +56,14 @@ void main()
 }
 
 vec4 wavefunction(vec2 laplacian, vec2 current_value, vec2 old_value, vec2 position){
-    vec2 change;
+    vec2 change = vec2(0);
     /*Classical Wave Function*/
-    float v = 0.5f;
-    //change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*laplacian;
+    float v = 1.0f;
+    change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*laplacian;
 
     /*klein gordon equation*/
-    float m = 2.5f;
-    change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*(laplacian - pow(m, 2)*current_value);
+    float m = 2.0f;
+    //change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*(laplacian - pow(m, 2)*current_value);
 
     /*sine gordon equation*/
     //change = 2*current_value - old_value + pow(v, 2)*pow(dt, 2)*(laplacian - sin(current_value.x)*vec2(1, 0));
@@ -72,10 +72,19 @@ vec4 wavefunction(vec2 laplacian, vec2 current_value, vec2 old_value, vec2 posit
     float w = 3.0f;
     float pe = 0.5*pow(w, 2)*dot(position, position);
     vec2 ke = -0.5f*laplacian;
-    if(!bool(classical)){
+    /*if(!bool(classical)){
         change = -i*(ke + pe*current_value);
         return vec4(old_value + 2.0f*0.0001*change, 0, 0);
-    }
+    }*/
+    float sp= 1;
+    float r = 3.5;
+    float size = 1.0f;
+    float l1 = length(vec3(position, 0.5)-r*vec3(cos(dt*sp*time), sin(dt*sp*time), 0));
+    //float l2 = length(position+r*vec2(cos(dt*sp*time), sin(dt*sp*time)));
+    if(l1 < size)
+        change.x = (0.01/l1)*m*r*r*cos(2*(dt*time - l1));
+   //if(l2 < size)
+        //change = (cos(2*l2*PI) + 0.5)*vec2(0.5, 0);
 
     return vec4(change, old_value);
 }//

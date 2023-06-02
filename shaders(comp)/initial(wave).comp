@@ -50,10 +50,21 @@ void main()
 
     //vec4 color = vec4(sin(pos.x*PI/4)*sin(pos.y*PI/4), 0, 0, 1);
 
-    vec4 color = vec4(height1, 0, 0, 1);
-    if(!bool(classical))
+    vec4 color = 0*vec4(height1, 0, 0, 1);
+
+    float sp= 5;
+    float r = 3.5;
+    float size = 1.0f;
+    float l1 = length(vec3(pos, 0.5)-r*vec3(cos(dt*sp*time), sin(dt*sp*time), 0));
+    //float l2 = length(pos+r*vec2(cos(dt*sp*time), sin(dt*sp*time)));
+    float m = 2.0f;
+    if(l1 < size)
+        color.x = (0.01/l1)*m*r*r*cos(2*(dt*time - l1));
+    //if(l2 < size)
+        //change = (cos(2*l2*PI) + 0.5)*vec2(0.5, 0);
+    /*if(!bool(classical))
         color = height*vec4(cos(dot(p,pos)), sin(dot(p,pos)), 0, 1);
-    
+    */
     imageStore(old, texCoords, color);
     //vec4 color = vec4(sin(pos.x*PI/4)*cos(pos.y*PI/4), 0, 0, 1);
     //vec4 color = height*vec4(cos(dot(p,pos)), sin(dot(p,pos)), 0, 1);

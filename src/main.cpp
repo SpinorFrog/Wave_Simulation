@@ -27,7 +27,7 @@ const unsigned int SCR_HEIGHT = 1440;
 
 Camera cam(0.0f, 10.0f, -10.0f);
 bool firstMouse = true;
-bool classical = false;
+bool classical = true;
 bool evolve = true;
 
 //view matrix
@@ -53,7 +53,7 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -116,6 +116,7 @@ int main(){
     main.compile_shader();
 
     initial.use();
+    initial.setFloat("time", 0);
 
     const int grid_size = 1024; 
     int vSize = grid_size*grid_size*5;
@@ -244,6 +245,8 @@ int main(){
             initial.use();
             //main.use();
             main.setInt("classical", classical);
+            initial.setFloat("time", 0);
+            fake_time = 0.0f;
         }
 
         glm::vec3 camPos = cam.cameraPos;
