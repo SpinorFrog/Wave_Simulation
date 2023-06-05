@@ -22,7 +22,7 @@ void gui_editor(bool &run_sim, bool &QorC);
 bool returnMouse();
 
 //window size
-const unsigned int SCR_WIDTH = 2560;
+const unsigned int SCR_WIDTH = 3440;
 const unsigned int SCR_HEIGHT = 1440;
 
 Camera cam(0.0f, 10.0f, -10.0f);
